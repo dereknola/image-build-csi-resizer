@@ -2,12 +2,12 @@
 name: "Update external-resizer version"
 
 sources:
-  upstream:
-    name: Get external-resizer version
+  vsphere-csi-driver:
+    name: Get latest vsphere-csi-driver version
     kind: githubrelease
     spec:
-      owner: kubernetes-csi
-      repository: external-resizer
+      owner: kubernetes-sigs
+      repository: vsphere-csi-driver
       token: '{{ requiredEnv .github.token }}'
       typefilter:
         release: true
@@ -16,16 +16,25 @@ sources:
       versionfilter:
         kind: semver
 
+  external-resizer:
+    name: Get external-resizer version from vsphere-csi-driver manifest
+    kind: file
+    spec:
+      file: 'https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/{{ source "vsphere-csi-driver" }}/manifests/vanilla/vsphere-csi-driver.yaml'
+      matchpattern: 'registry\.k8s\.io/sig-storage/csi-resizer:(v[0-9]+\.[0-9]+\.[0-9]+)'
+      replacepattern: '$1'
+
 targets:
   tagfile:
-    name: "Bump to latest external-resizer version in TAG"
+    name: "Bump to external-resizer version used by vsphere-csi-driver in TAG"
     kind: file
+    sourceid: external-resizer
     scmid: default
     disablesourceinput: true
     spec:
       file: TAG
       matchpattern: '(?m)^(.+)$'
-      replacepattern: '{{ source "upstream" }}'
+      replacepattern: '{{ source "external-resizer" }}'
 
 scms:
   default:
@@ -41,7 +50,7 @@ scms:
 
 actions:
   default:
-    title: 'Bump external-resizer version to {{ source "upstream" }}'
+    title: 'Bump external-resizer version to {{ source "external-resizer" }}'
     kind: github/pullrequest
     spec:
       merge:
