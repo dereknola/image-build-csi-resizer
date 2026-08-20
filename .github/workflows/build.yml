@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  build-csi-resizer:
+  build:
     permissions:
       contents: read
       id-token: write
@@ -23,8 +23,7 @@ jobs:
 
     - name: Set the TAG value
       run: |
-        TAG=$(make -s log | grep '^TAG=' | cut -d '=' -f2)
-        BUILD_META=$(make -s log | grep '^BUILD_META=' | cut -d '=' -f2)
+        eval "$(make -s log | grep -E '^(TAG|BUILD_META)=')"
         echo "TAG=${TAG}${BUILD_META}" >> "$GITHUB_ENV"
 
     - name: Build hardened-csi-resizer image
